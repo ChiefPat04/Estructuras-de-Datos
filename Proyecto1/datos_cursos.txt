@@ -1,0 +1,11 @@
+1|0|Curso|Estructuras de Datos|0
+2|1|Unidad|Fundamentos|0
+3|2|Tema|Tipos abstractos|0
+4|3|Recurso|PDF de teoría|2
+5|3|Recurso|Video introductorio|0
+6|2|Tema|Complejidad|0
+7|6|Actividad|Quiz|0
+8|1|Unidad|Estructuras lineales|0
+9|8|Tema|Listas|0
+10|8|Tema|Pilas|0
+11|8|Tema|Colas|0

@@ -1,0 +1,89 @@
+===== REPORTES DEL SISTEMA =====
+
+--- Reporte 1: Lista completa de estudiantes ---
+1. 123456789 | Patrick Zúñiga Arroyo | p.zuniga.1@estudiantec.cr
+2. 12345 | Carlos Jiménez Nava | carlosjim@estudiantec.cr
+
+--- Reporte 2: Recorrido del ABB en inorden (por carné) ---
+1. 12345 | Carlos Jiménez Nava
+2. 123456789 | Patrick Zúñiga Arroyo
+
+--- Reporte 3: Estructura jerárquica del curso ---
+FOC  [Curso #1]
+    1 Conjuntos  [Unidad #1]
+
+--- Reporte 3: Estructura jerárquica del curso ---
+Estructuras de Datos  [Curso #2]
+    1 Fundamentos  [Unidad #1]
+        1.1 Tipos abstractos  [Tema #1]
+            1.1.1 PDF de teoría  [Recurso #1]
+            1.1.2 Video introductorio  [Recurso #2]
+        1.2 Complejidad  [Tema #2]
+            1.2.1 Quiz  [Actividad #1]
+    2 Estructuras lineales  [Unidad #2]
+        2.1 Listas  [Tema #1]
+        2.2 Pilas  [Tema #2]
+        2.3 Colas  [Tema #3]
+
+--- Reporte 4: Historial de navegación de Patrick Zúñiga Arroyo (123456789) ---
+  -> [Unidad 1] Fundamentos  (Estructuras de Datos > Fundamentos)
+(-> es la página actual; arriba lo más reciente)
+
+--- Reporte 4: Historial de navegación de Carlos Jiménez Nava (12345) ---
+El historial está vacío.
+
+--- Reporte 5: Solicitudes pendientes en cola ---
+Modo de atención: por orden de llegada
+  Solicitud #2 - Consulta académica (prioridad baja)
+    Estudiante: 123456789 - Patrick Zúñiga Arroyo
+    Contenido:  [Recurso 1.1.2] Video introductorio  (Estructuras de Datos > Fundamentos > Tipos abstractos > Video introductorio)
+    Detalle:    Hay un cuestionario sobre el video?
+Total en espera: 1
+
+--- Reporte 6: Cantidad de nodos del árbol genérico ---
+  FOC: 2 nodos
+  Estructuras de Datos: 11 nodos
+Total de nodos: 13
+
+--- Reporte 7: Altura del árbol genérico ---
+  FOC: 2 niveles
+  Estructuras de Datos: 4 niveles
+
+--- Reporte 8: Cantidad de estudiantes registrados ---
+Estudiantes: 2
+
+--- Reporte 9: Estudiante con menor y mayor carné ---
+Menor carné: 12345 - Carlos Jiménez Nava
+Mayor carné: 123456789 - Patrick Zúñiga Arroyo
+
+--- Reporte 10: Recursos hoja del curso "FOC" ---
+  [Unidad 1] Conjuntos
+      ruta: FOC > Conjuntos
+Total de hojas: 1
+
+--- Reporte 10: Recursos hoja del curso "Estructuras de Datos" ---
+  [Recurso 1.1.1] PDF de teoría
+      ruta: Estructuras de Datos > Fundamentos > Tipos abstractos > PDF de teoría
+  [Recurso 1.1.2] Video introductorio
+      ruta: Estructuras de Datos > Fundamentos > Tipos abstractos > Video introductorio
+  [Actividad 1.2.1] Quiz
+      ruta: Estructuras de Datos > Fundamentos > Complejidad > Quiz
+  [Tema 2.1] Listas
+      ruta: Estructuras de Datos > Estructuras lineales > Listas
+  [Tema 2.2] Pilas
+      ruta: Estructuras de Datos > Estructuras lineales > Pilas
+  [Tema 2.3] Colas
+      ruta: Estructuras de Datos > Estructuras lineales > Colas
+Total de hojas: 6
+
+--- Reporte 11: Estadísticas de uso de recursos ---
+Visitas registradas en total: 3
+
+Contenidos más visitados (hasta 5):
+  1. [Unidad 1] Fundamentos  (Estructuras de Datos > Fundamentos) - 1 visita(s)
+  2. [Recurso 1.1.1] PDF de teoría  (Estructuras de Datos > Fundamentos > Tipos abstractos > PDF de teoría) - 1 visita(s)
+  3. [Tema 2.1] Listas  (Estructuras de Datos > Estructuras lineales > Listas) - 1 visita(s)
+
+Actividad por estudiante:
+  123456789 | Patrick Zúñiga Arroyo: 1 página(s) en el historial, 0 completado(s), 1 inscripción(es)
+  12345 | Carlos Jiménez Nava: 0 página(s) en el historial, 0 completado(s), 0 inscripción(es)

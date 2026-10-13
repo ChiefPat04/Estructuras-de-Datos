@@ -1,4 +1,4 @@
-//Implementación de la clase AVL y programa de prueba
+//Implementación de la clase AVL y Main
 
 #include "Avl.h"
 #include <iostream>
@@ -172,5 +172,3 @@ int main() {
     }
     return 0;
 }
-
-//PARA COMPILAR: cd "c:\Users\sebit\Dev\Estructuras-de-Datos\Laboratorios\Lab8" && g++ -std=c++17 -Wall -Wextra -pedantic Avl.cpp -o avl && ./avl
