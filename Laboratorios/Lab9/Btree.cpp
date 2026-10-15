@@ -1,6 +1,6 @@
 
-// 
-BTree.cpp  -  Implementación de la clase BTree (Árbol B de orden 5)
+ 
+//BTree.cpp  -  Implementación de la clase BTree (Árbol B de orden 5)
 #include "BTree.h"
 #include <iostream>
 #include <fstream>
