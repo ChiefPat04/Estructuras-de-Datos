@@ -1,0 +1,7 @@
+# entrada_error_config.txt - configuracion invalida.
+# 65536 no es multiplo de 1000, asi que el tamano de pagina es invalido
+# y la simulacion no puede empezar.
+MEMORIA_TOTAL 65536
+TAMANO_PAGINA 1000
+TAMANO_CACHE_GLOBAL 8
+NEW_PROCESS P1 4096

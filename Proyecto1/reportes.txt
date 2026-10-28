@@ -1,19 +1,23 @@
 ===== REPORTES DEL SISTEMA =====
 
 --- Reporte 1: Lista completa de estudiantes ---
-1. 123456789 | Patrick Zúñiga Arroyo | p.zuniga.1@estudiantec.cr
-2. 12345 | Carlos Jiménez Nava | carlosjim@estudiantec.cr
+1. 2024001 | Luis | luis@estudiantec.cr
+2. 2024002 | Marcos | marcos@estudiantec.cr
+3. 2024003 | Gabriel | gabriel@estudiantec.cr
+4. 2020 | patrick | patrick@estudiantec.cr
+5. 2021 | juan | juan@estudiantec.cr
+6. 2022 | juana | maría@estudiantec.cr
 
 --- Reporte 2: Recorrido del ABB en inorden (por carné) ---
-1. 12345 | Carlos Jiménez Nava
-2. 123456789 | Patrick Zúñiga Arroyo
+1. 2020 | patrick
+2. 2021 | juan
+3. 2022 | juana
+4. 2024001 | Luis
+5. 2024002 | Marcos
+6. 2024003 | Gabriel
 
 --- Reporte 3: Estructura jerárquica del curso ---
-FOC  [Curso #1]
-    1 Conjuntos  [Unidad #1]
-
---- Reporte 3: Estructura jerárquica del curso ---
-Estructuras de Datos  [Curso #2]
+Estructuras de Datos  [Curso #1]
     1 Fundamentos  [Unidad #1]
         1.1 Tipos abstractos  [Tema #1]
             1.1.1 PDF de teoría  [Recurso #1]
@@ -25,41 +29,56 @@ Estructuras de Datos  [Curso #2]
         2.2 Pilas  [Tema #2]
         2.3 Colas  [Tema #3]
 
---- Reporte 4: Historial de navegación de Patrick Zúñiga Arroyo (123456789) ---
-  -> [Unidad 1] Fundamentos  (Estructuras de Datos > Fundamentos)
+--- Reporte 3: Estructura jerárquica del curso ---
+Estructuras  [Curso #2]
+
+--- Reporte 4: Historial de navegación de Luis (2024001) ---
+  -> [Recurso 1.1.1] PDF de teoría  (Estructuras de Datos > Fundamentos > Tipos abstractos > PDF de teoría)
+     [Recurso 1.1.1] PDF de teoría  (Estructuras de Datos > Fundamentos > Tipos abstractos > PDF de teoría)
 (-> es la página actual; arriba lo más reciente)
 
---- Reporte 4: Historial de navegación de Carlos Jiménez Nava (12345) ---
+--- Reporte 4: Historial de navegación de Marcos (2024002) ---
+El historial está vacío.
+
+--- Reporte 4: Historial de navegación de Gabriel (2024003) ---
+El historial está vacío.
+
+--- Reporte 4: Historial de navegación de patrick (2020) ---
+El historial está vacío.
+
+--- Reporte 4: Historial de navegación de juan (2021) ---
+El historial está vacío.
+
+--- Reporte 4: Historial de navegación de juana (2022) ---
 El historial está vacío.
 
 --- Reporte 5: Solicitudes pendientes en cola ---
 Modo de atención: por orden de llegada
-  Solicitud #2 - Consulta académica (prioridad baja)
-    Estudiante: 123456789 - Patrick Zúñiga Arroyo
-    Contenido:  [Recurso 1.1.2] Video introductorio  (Estructuras de Datos > Fundamentos > Tipos abstractos > Video introductorio)
-    Detalle:    Hay un cuestionario sobre el video?
-Total en espera: 1
+  Solicitud #1 - Consulta académica (prioridad baja)
+    Estudiante: 2020 - patrick
+    Contenido:  [Recurso 1.1.1] PDF de teoría  (Estructuras de Datos > Fundamentos > Tipos abstractos > PDF de teoría)
+    Detalle:    El PDF no abre
+  Solicitud #3 - Habilitación de recurso (prioridad media)
+    Estudiante: 2020 - patrick
+    Contenido:  [Tema 1.1] Tipos abstractos  (Estructuras de Datos > Fundamentos > Tipos abstractos)
+    Detalle:    el archivo está corrompido
+Total en espera: 2
 
 --- Reporte 6: Cantidad de nodos del árbol genérico ---
-  FOC: 2 nodos
   Estructuras de Datos: 11 nodos
-Total de nodos: 13
+  Estructuras: 1 nodos
+Total de nodos: 12
 
 --- Reporte 7: Altura del árbol genérico ---
-  FOC: 2 niveles
   Estructuras de Datos: 4 niveles
+  Estructuras: 1 niveles
 
 --- Reporte 8: Cantidad de estudiantes registrados ---
-Estudiantes: 2
+Estudiantes: 6
 
 --- Reporte 9: Estudiante con menor y mayor carné ---
-Menor carné: 12345 - Carlos Jiménez Nava
-Mayor carné: 123456789 - Patrick Zúñiga Arroyo
-
---- Reporte 10: Recursos hoja del curso "FOC" ---
-  [Unidad 1] Conjuntos
-      ruta: FOC > Conjuntos
-Total de hojas: 1
+Menor carné: 2020 - patrick
+Mayor carné: 2024003 - Gabriel
 
 --- Reporte 10: Recursos hoja del curso "Estructuras de Datos" ---
   [Recurso 1.1.1] PDF de teoría
@@ -76,14 +95,22 @@ Total de hojas: 1
       ruta: Estructuras de Datos > Estructuras lineales > Colas
 Total de hojas: 6
 
+--- Reporte 10: Recursos hoja del curso "Estructuras" ---
+  [Curso ] Estructuras
+      ruta: Estructuras
+Total de hojas: 1
+
 --- Reporte 11: Estadísticas de uso de recursos ---
-Visitas registradas en total: 3
+Visitas registradas en total: 4
 
 Contenidos más visitados (hasta 5):
-  1. [Unidad 1] Fundamentos  (Estructuras de Datos > Fundamentos) - 1 visita(s)
-  2. [Recurso 1.1.1] PDF de teoría  (Estructuras de Datos > Fundamentos > Tipos abstractos > PDF de teoría) - 1 visita(s)
-  3. [Tema 2.1] Listas  (Estructuras de Datos > Estructuras lineales > Listas) - 1 visita(s)
+  1. [Recurso 1.1.1] PDF de teoría  (Estructuras de Datos > Fundamentos > Tipos abstractos > PDF de teoría) - 3 visita(s)
+  2. [Actividad 1.2.1] Quiz  (Estructuras de Datos > Fundamentos > Complejidad > Quiz) - 1 visita(s)
 
 Actividad por estudiante:
-  123456789 | Patrick Zúñiga Arroyo: 1 página(s) en el historial, 0 completado(s), 1 inscripción(es)
-  12345 | Carlos Jiménez Nava: 0 página(s) en el historial, 0 completado(s), 0 inscripción(es)
+  2024001 | Luis: 2 página(s) en el historial, 0 completado(s), 0 inscripción(es)
+  2024002 | Marcos: 0 página(s) en el historial, 0 completado(s), 0 inscripción(es)
+  2024003 | Gabriel: 0 página(s) en el historial, 0 completado(s), 0 inscripción(es)
+  2020 | patrick: 0 página(s) en el historial, 0 completado(s), 1 inscripción(es)
+  2021 | juan: 0 página(s) en el historial, 0 completado(s), 0 inscripción(es)
+  2022 | juana: 0 página(s) en el historial, 0 completado(s), 0 inscripción(es)

@@ -1,0 +1,19 @@
+@echo off
+REM ============================================================
+REM compilar.bat - compila el simulador en Windows con g++ (MinGW)
+REM Doble clic, o ejecutar "compilar.bat" desde la terminal.
+REM Cada archivo .cpp NUEVO del sistema se agrega a la linea de g++.
+REM (Los archivos pruebaXXX.cpp NO van aqui: tienen su propio main.)
+REM AVLTree.h y SplayTree.h no se agregan: son plantillas y estan
+REM completas en su .h.
+REM ============================================================
+echo Compilando...
+g++ -std=c++14 -Wall -Wextra -g main.cpp OperationParser.cpp MemoryManager.cpp Process.cpp Page.cpp Cache.cpp -o proyecto.exe
+if %errorlevel% neq 0 (
+    echo.
+    echo *** ERROR de compilacion. Revise los mensajes de arriba. ***
+) else (
+    echo.
+    echo Compilacion exitosa. Ejecute: proyecto.exe
+)
+pause

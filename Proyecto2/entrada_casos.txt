@@ -1,0 +1,70 @@
+# entrada_casos.txt - recorre los 12 casos de prueba minimos del enunciado
+# y los 9 tipos de error. Todo lo que esta despues de '#' es un comentario.
+#
+# Memoria: 65536 / 1024 = 64 paginas fisicas. Cache global de 4 entradas.
+
+MEMORIA_TOTAL 65536
+TAMANO_PAGINA 1024
+TAMANO_CACHE_GLOBAL 4
+
+# ---- Caso 1: creacion de un proceso valido ----
+NEW_PROCESS P1 10240          # 10 paginas (fisicas 0-9), cache local de 2
+
+# ---- Caso 12: multiples procesos activos ----
+NEW_PROCESS P2 4096           # 4 paginas (fisicas 10-13), cache local de 1
+NEW_PROCESS P3 2048           # 2 paginas (fisicas 14-15), cache local de 1
+
+# ---- Caso 2: creacion de proceso con memoria insuficiente ----
+NEW_PROCESS P4 60000          # pide 59 paginas y solo quedan 48
+
+# ---- Error: proceso duplicado ----
+NEW_PROCESS P1 1024
+
+# ---- Caso 4: acceso exitoso a pagina ----
+ACCESS P1 2500                # pagina 2: MISS local, MISS global
+ACCESS P1 2600                # misma pagina 2: HIT local
+
+# ---- Caso 9: llenado del cache local (P1 tiene cache local de 2) ----
+ACCESS P1 0                   # pagina 0: el cache local queda lleno [0 2]
+ACCESS P1 5000                # pagina 4: LRU expulsa la pagina 2 del cache local
+
+# ---- HIT en cache global: P1:2 salio del local pero sigue en el global ----
+ACCESS P1 2500
+
+# ---- Caso 10 y 11: llenado del cache global y reemplazo por LRU ----
+ACCESS P2 0                   # el cache global (4) queda lleno
+ACCESS P3 0                   # LRU expulsa la entrada global menos reciente
+ACCESS P2 1024
+
+# ---- Caso 5: acceso a direccion invalida ----
+ACCESS P1 -1                  # direccion negativa
+ACCESS P3 5000                # pagina 4, pero P3 solo tiene paginas 0-1
+ACCESS P9 0                   # proceso inexistente
+
+# ---- Caso 6: asignacion adicional de memoria ----
+ALLOCATE P2 8192              # 8 paginas mas: P2 pasa a 12 y su cache local a 2
+ALLOCATE P3 100000            # memoria insuficiente
+
+# ---- Caso 7: liberacion parcial de memoria ----
+FREE P1 2048 2048             # libera las paginas virtuales 2 y 3 de P1
+ACCESS P1 2500                # la pagina 2 ya no existe: acceso a pagina no valida
+ACCESS P1 0                   # la pagina 0 sigue funcionando
+
+# ---- Caso 8: liberacion invalida ----
+FREE P1 2048 1024             # la pagina 2 ya fue liberada
+FREE P3 0 99999               # fuera del espacio de P3
+
+# ---- Errores de formato ----
+MOVE P1 0                     # operacion desconocida
+ACCESS P1 abc                 # 'abc' no es un numero
+NEW_PROCESS P5                # falta la memoria
+
+# ---- Caso 3: finalizacion de proceso ----
+END_PROCESS P1
+END_PROCESS P1                # ya no existe
+
+# ---- Al final, el estado y las metricas ----
+ESTADO
+METRICAS
+END_PROCESS P2
+END_PROCESS P3

@@ -1,0 +1,23 @@
+Leyendo operaciones del archivo: entrada_error_config.txt
+
+------------------------------------------------------------
+[Linea 4] MEMORIA_TOTAL 65536
+  MEMORIA_TOTAL = 65536
+
+------------------------------------------------------------
+[Linea 5] TAMANO_PAGINA 1000
+  TAMANO_PAGINA = 1000
+
+------------------------------------------------------------
+[Linea 6] TAMANO_CACHE_GLOBAL 8
+  TAMANO_CACHE_GLOBAL = 8
+  ERROR: Tamano de pagina invalido: MEMORIA_TOTAL (65536) no es multiplo de TAMANO_PAGINA (1000)
+
+  La simulacion se detuvo: sin una configuracion valida no se puede continuar.
+
+============================================================
+RESUMEN FINAL
+============================================================
+  Operaciones ejecutadas con exito: 0
+  Errores detectados:               1
+  La memoria no se llego a configurar.
