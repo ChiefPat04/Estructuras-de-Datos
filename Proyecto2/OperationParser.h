@@ -14,6 +14,8 @@
 //   FREE idProceso direccionInicial bytes
 //   ESTADO | METRICAS | AYUDA | SALIR                           (extras)
 //   ARBOL AVL | ARBOL SPLAY idProceso | EXPORTAR archivo.csv    (extras)
+//   PAGINAS_SWAP n   (extra, opcional: activa el reemplazo de paginas;
+//                     va antes de la primera operacion)
 // - Las lineas vacias se ignoran.
 // - Todo lo que esta despues de '#' es un comentario.
 // - Los comandos aceptan mayusculas o minusculas; los id de proceso no.
@@ -40,6 +42,9 @@ private:
     bool hayMemoriaTotal_;
     bool hayTamanoPagina_;
     bool hayTamanoCache_;
+    long long paginasSwap_;   // extra opcional: 0 = sin reemplazo de paginas
+    bool haySwap_;
+    bool huboOperacion_;      // ya se leyo alguna operacion de memoria
 
     int operaciones_;     // operaciones ejecutadas sin error
     int errores_;         // errores detectados
@@ -52,6 +57,7 @@ private:
     bool procesarConfiguracion(const std::string& nombre,
                                const std::vector<std::string>& palabras);
     bool crearMemoria();
+    void procesarSwap(const std::vector<std::string>& palabras);
 
     void ejecutarOperacion(const std::string& comando,
                            const std::vector<std::string>& palabras);

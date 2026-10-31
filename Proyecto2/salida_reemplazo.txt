@@ -1,0 +1,182 @@
+Leyendo operaciones del archivo: entrada_reemplazo.txt
+
+------------------------------------------------------------
+[Linea 7] MEMORIA_TOTAL 4096
+  MEMORIA_TOTAL = 4096
+
+------------------------------------------------------------
+[Linea 8] TAMANO_PAGINA 1024
+  TAMANO_PAGINA = 1024
+
+------------------------------------------------------------
+[Linea 9] TAMANO_CACHE_GLOBAL 2
+  TAMANO_CACHE_GLOBAL = 2
+  Memoria configurada: 4096 / 1024 = 4 paginas fisicas | cache global de 2 entradas
+  Estado inicial:
+  Paginas fisicas: 4 | libres: 4 | ocupadas: 0
+  Paginas libres (AVL en orden): 0 1 2 3
+  Procesos activos: ninguno
+  Cache global (0/2): []
+  Hits/misses -> local: 0/0 | global: 0/0
+
+------------------------------------------------------------
+[Linea 10] PAGINAS_SWAP 4
+  PAGINAS_SWAP = 4
+  Reemplazo de paginas activado: swap de 4 paginas, victima elegida por LRU
+
+------------------------------------------------------------
+[Linea 12] NEW_PROCESS P1 2048
+  Proceso P1 creado con 2 paginas (virtuales 0-1), cache local de 1
+  Estado de la memoria:
+  Paginas fisicas: 4 | libres: 2 | ocupadas: 2
+  Swap (memoria secundaria): 0/4 paginas usadas
+  Paginas libres (AVL en orden): 2 3
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (0/2): []
+  Hits/misses -> local: 0/0 | global: 0/0
+  Fallos de pagina: 0 | reemplazos: 0
+
+------------------------------------------------------------
+[Linea 13] NEW_PROCESS P2 2048
+  Proceso P2 creado con 2 paginas (virtuales 0-1), cache local de 1
+  Estado de la memoria:
+  Paginas fisicas: 4 | libres: 0 | ocupadas: 4
+  Swap (memoria secundaria): 0/4 paginas usadas
+  Paginas libres (AVL en orden): ninguna
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+    P2 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (0/2): []
+  Hits/misses -> local: 0/0 | global: 0/0
+  Fallos de pagina: 0 | reemplazos: 0
+
+------------------------------------------------------------
+[Linea 14] ACCESS P1 0
+  Pagina virtual: 0
+  Desplazamiento: 0
+  Resultado: MISS en cache local, MISS en cache global (se obtuvo del Splay Tree)
+  Pagina fisica: 0
+  Estado de la memoria:
+  Paginas fisicas: 4 | libres: 0 | ocupadas: 4
+  Swap (memoria secundaria): 0/4 paginas usadas
+  Paginas libres (AVL en orden): ninguna
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (1/1): [P1:0->0] | en swap: []
+    P2 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (1/2): [P1:0->0]
+  Hits/misses -> local: 0/1 | global: 0/1
+  Fallos de pagina: 0 | reemplazos: 0
+
+------------------------------------------------------------
+[Linea 15] NEW_PROCESS P3 2048
+  Proceso P3 creado con 2 paginas (virtuales 0-1), cache local de 1
+  Reemplazo de pagina: LRU pasa P1:1 (pagina fisica 1) a swap
+  Reemplazo de pagina: LRU pasa P2:0 (pagina fisica 2) a swap
+  Estado de la memoria:
+  Paginas fisicas: 4 | libres: 0 | ocupadas: 4
+  Swap (memoria secundaria): 2/4 paginas usadas
+  Paginas libres (AVL en orden): ninguna
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (1/1): [P1:0->0] | en swap: [1]
+    P2 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: [0]
+    P3 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (1/2): [P1:0->0]
+  Hits/misses -> local: 0/1 | global: 0/1
+  Fallos de pagina: 0 | reemplazos: 2
+
+------------------------------------------------------------
+[Linea 16] ACCESS P1 1024
+  Pagina virtual: 1
+  Desplazamiento: 0
+  Resultado: MISS en cache local, MISS en cache global (se obtuvo del Splay Tree)
+  Cache local lleno: LRU expulsa P1:0
+  Pagina fisica: 3
+  Fallo de pagina: P1:1 estaba en swap
+  Reemplazo de pagina: LRU pasa P2:1 (pagina fisica 3) a swap
+  P1:1 se cargo en la pagina fisica 3
+  Estado de la memoria:
+  Paginas fisicas: 4 | libres: 0 | ocupadas: 4
+  Swap (memoria secundaria): 2/4 paginas usadas
+  Paginas libres (AVL en orden): ninguna
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (1/1): [P1:1->3] | en swap: []
+    P2 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: [0 1]
+    P3 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (2/2): [P1:1->3 P1:0->0]
+  Hits/misses -> local: 0/2 | global: 0/2
+  Fallos de pagina: 1 | reemplazos: 3
+
+------------------------------------------------------------
+[Linea 17] ACCESS P1 1024
+  Pagina virtual: 1
+  Desplazamiento: 0
+  Resultado: HIT en cache local
+  Pagina fisica: 3
+  Estado de la memoria:
+  Paginas fisicas: 4 | libres: 0 | ocupadas: 4
+  Swap (memoria secundaria): 2/4 paginas usadas
+  Paginas libres (AVL en orden): ninguna
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (1/1): [P1:1->3] | en swap: []
+    P2 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: [0 1]
+    P3 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (2/2): [P1:1->3 P1:0->0]
+  Hits/misses -> local: 1/2 | global: 0/2
+  Fallos de pagina: 1 | reemplazos: 3
+
+------------------------------------------------------------
+[Linea 18] ARBOL SPLAY P1
+  Splay Tree de P1 (clave = pagina virtual).
+  La raiz es la linea sin sangria; suele ser la pagina usada mas recientemente.
+1
+      0
+
+------------------------------------------------------------
+[Linea 19] END_PROCESS P2
+  Proceso P2 finalizado: 0 paginas fisicas vuelven al AVL de libres y 2 paginas salen de swap
+  Estado de la memoria:
+  Paginas fisicas: 4 | libres: 0 | ocupadas: 4
+  Swap (memoria secundaria): 0/4 paginas usadas
+  Paginas libres (AVL en orden): ninguna
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (1/1): [P1:1->3] | en swap: []
+    P3 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (2/2): [P1:1->3 P1:0->0]
+  Hits/misses -> local: 1/2 | global: 0/2
+  Fallos de pagina: 1 | reemplazos: 3
+
+------------------------------------------------------------
+[Linea 20] NEW_PROCESS P4 9000
+  ERROR: Memoria insuficiente: P4 necesita 9 paginas y la memoria fisica solo tiene 4
+  (La memoria no cambio.)
+
+============================================================
+RESUMEN FINAL
+============================================================
+  Operaciones ejecutadas con exito: 7
+  Errores detectados:               1
+
+Metricas:
+  Total de accesos:           3
+  Hits en cache local:        1
+  Misses en cache local:      2
+  Hits en cache global:       0
+  Misses en cache global:     2
+  Paginas asignadas:          4
+  Paginas libres:             0
+  Fallos de pagina:           1
+  Paginas reemplazadas:       3
+  Paginas en swap:            0/4
+  Utilizacion de memoria:     100.00%
+
+Estado final de la memoria:
+  Paginas fisicas: 4 | libres: 0 | ocupadas: 4
+  Swap (memoria secundaria): 0/4 paginas usadas
+  Paginas libres (AVL en orden): ninguna
+  Procesos activos:
+    P1 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (1/1): [P1:1->3] | en swap: []
+    P3 | memoria solicitada: 2048 bytes | paginas: 2 | cache local (0/1): [] | en swap: []
+  Cache global (2/2): [P1:1->3 P1:0->0]
+  Hits/misses -> local: 1/2 | global: 0/2
+  Fallos de pagina: 1 | reemplazos: 3

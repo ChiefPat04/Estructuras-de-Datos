@@ -104,3 +104,11 @@ void Cache::vaciar() {
     orden_.clear();
     indice_.clear();
 }
+
+bool Cache::menosReciente(EntradaCache& salida) const {
+    if (orden_.empty()) {
+        return false;
+    }
+    salida = orden_.back();
+    return true;
+}

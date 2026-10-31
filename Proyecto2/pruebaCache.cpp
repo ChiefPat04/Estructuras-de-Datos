@@ -120,6 +120,23 @@ static void pruebaCapacidadCero() {
     verificar(c.tamano() == 0, "el cache de 0 queda vacio");
 }
 
+// menosReciente (la usa el reemplazo de paginas para elegir la victima).
+static void pruebaMenosReciente() {
+    std::cout << "\n== Menos reciente (victima LRU) ==\n";
+    Cache c(3);
+    EntradaCache victima;
+    verificar(!c.menosReciente(victima), "un cache vacio no tiene victima");
+    c.insertar(entrada("A", 0), nullptr);
+    c.insertar(entrada("A", 1), nullptr);
+    c.insertar(entrada("A", 2), nullptr);
+    verificar(c.menosReciente(victima) && victima.paginaVirtual == 0,
+              "la victima es la entrada usada hace mas tiempo (A:0)");
+    verificar(c.tamano() == 3, "consultar la victima no la saca del cache");
+    c.buscar("A", 0);
+    verificar(c.menosReciente(victima) && victima.paginaVirtual == 1,
+              "al usar A:0, la victima pasa a ser A:1");
+}
+
 int main() {
     std::cout << "=== PRUEBAS DEL CACHE LRU ===\n";
 
@@ -130,6 +147,7 @@ int main() {
     pruebaEliminarProceso();
     pruebaRedimensionar();
     pruebaCapacidadCero();
+    pruebaMenosReciente();
 
     std::cout << "\nResultado: " << pasadas << " aprobadas, "
               << falladas << " falladas.\n";

@@ -1,0 +1,20 @@
+# ============================================================
+# entrada_reemplazo.txt - ejemplo del extra: reemplazo de paginas.
+# La memoria fisica tiene solo 4 paginas y el swap (memoria
+# secundaria) tiene 4. PAGINAS_SWAP es opcional: sin esa linea el
+# simulador funciona igual que siempre.
+# ============================================================
+MEMORIA_TOTAL 4096
+TAMANO_PAGINA 1024
+TAMANO_CACHE_GLOBAL 2
+PAGINAS_SWAP 4             # activa el reemplazo de paginas
+
+NEW_PROCESS P1 2048        # paginas fisicas 0 y 1
+NEW_PROCESS P2 2048        # paginas fisicas 2 y 3: la memoria fisica queda llena
+ACCESS P1 0                # P1:0 pasa a ser la pagina usada mas recientemente
+NEW_PROCESS P3 2048        # no hay libres: LRU pasa P1:1 y P2:0 a swap
+ACCESS P1 1024             # P1:1 esta en swap: fallo de pagina; LRU pasa P2:1 a swap
+ACCESS P1 1024             # ahora P1:1 esta en memoria: HIT en cache local
+ARBOL SPLAY P1             # la raiz es P1:1, la ultima pagina usada
+END_PROCESS P2             # sus 2 paginas estaban en swap: el swap queda vacio
+NEW_PROCESS P4 9000        # error: 9 paginas no caben en 4 paginas fisicas

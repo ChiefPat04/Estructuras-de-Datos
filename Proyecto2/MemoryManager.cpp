@@ -40,6 +40,32 @@ namespace {
         salida << "]";
         return salida.str();
     }
+
+    // Paginas virtuales de un proceso que estan en swap: "[3 4]".
+    std::string listaSwap(Process& proceso) {
+        std::vector<std::pair<int, Page> > paginas = proceso.getTabla().recorrido();
+        std::ostringstream salida;
+        salida << "[";
+        bool primera = true;
+        for (std::size_t i = 0; i < paginas.size(); i++) {
+            if (!paginas[i].second.esValida()) {
+                if (!primera) salida << " ";
+                salida << paginas[i].first;
+                primera = false;
+            }
+        }
+        salida << "]";
+        return salida.str();
+    }
+
+    int contarEnSwap(Process& proceso) {
+        std::vector<std::pair<int, Page> > paginas = proceso.getTabla().recorrido();
+        int cantidad = 0;
+        for (std::size_t i = 0; i < paginas.size(); i++) {
+            if (!paginas[i].second.esValida()) cantidad++;
+        }
+        return cantidad;
+    }
 }
 
 // ------------------------------------------------------------
@@ -51,7 +77,8 @@ MemoryManager::MemoryManager(long long memoriaTotal, int tamanoPagina,
     : memoriaTotal_(memoriaTotal), tamanoPagina_(tamanoPagina),
       totalPaginas_(static_cast<int>(memoriaTotal / tamanoPagina)),
       paginasLibres_(), procesos_(), ordenProcesos_(),
-      cacheGlobal_(tamanoCacheGlobal), reloj_(0), metricas_() {
+      cacheGlobal_(tamanoCacheGlobal), reloj_(0), metricas_(),
+      capacidadSwap_(0), paginasEnSwap_(0), marcos_(totalPaginas_), eventos_() {
     // Al inicio todas las paginas fisicas estan libres.
     for (int fisica = 0; fisica < totalPaginas_; fisica++) {
         paginasLibres_.insertar(fisica, Page(-1, fisica, ""));
@@ -112,13 +139,119 @@ Process* MemoryManager::buscarProceso(const std::string& id) const {
 
 void MemoryManager::darPaginas(Process& proceso, long long cantidad) {
     for (long long i = 0; i < cantidad; i++) {
-        int fisica = 0;
-        Page libre;
-        paginasLibres_.extraerMinimo(fisica, libre);    // la pagina libre mas baja
+        int fisica = obtenerMarco();                    // la pagina libre mas baja
         int virtual_ = proceso.reservarPaginaVirtual();
         proceso.getTabla().insertar(virtual_, Page(virtual_, fisica, proceso.getId()));
+        marcarUso(proceso.getId(), virtual_, fisica);
     }
     proceso.actualizarCapacidadCache();
+}
+
+bool MemoryManager::alcanzanPaginas(const std::string& id, long long necesarias,
+                                    bool adicionales, std::string& error) const {
+    std::string paginasTexto = adicionales ? " paginas mas" : " paginas";
+
+    if (!reemplazoActivo()) {
+        if (necesarias > paginasLibres()) {
+            error = "Memoria insuficiente: " + id + " necesita " + texto(necesarias)
+                  + paginasTexto + " y solo hay " + texto(paginasLibres()) + " libres";
+            return false;
+        }
+        return true;
+    }
+
+    // Con reemplazo: cada pagina que falte en memoria fisica obliga a pasar
+    // otra a swap, asi que alcanzan las libres de memoria fisica mas las
+    // libres de swap. Las paginas nuevas siempre entran a memoria fisica, por
+    // eso una sola operacion no puede pedir mas paginas que las que hay.
+    long long libresSwap = capacidadSwap_ - paginasEnSwap_;
+    if (necesarias > totalPaginas_) {
+        error = "Memoria insuficiente: " + id + " necesita " + texto(necesarias) + paginasTexto
+              + " y la memoria fisica solo tiene " + texto(totalPaginas_);
+        return false;
+    }
+    if (necesarias > paginasLibres() + libresSwap) {
+        error = "Memoria insuficiente: " + id + " necesita " + texto(necesarias) + paginasTexto
+              + "; hay " + texto(paginasLibres()) + " libres en memoria fisica y "
+              + texto(libresSwap) + " libres en swap";
+        return false;
+    }
+    return true;
+}
+
+// ------------------------------------------------------------
+// Extra: reemplazo de paginas
+// ------------------------------------------------------------
+
+bool MemoryManager::configurarSwap(long long paginas, std::string& error) {
+    if (paginas < 0 || paginas > MAX_PAGINAS_SWAP) {
+        error = "Archivo de entrada incorrecto: PAGINAS_SWAP debe estar entre 0 y "
+              + texto(MAX_PAGINAS_SWAP);
+        return false;
+    }
+    if (!procesos_.empty() || metricas_.accesos > 0) {
+        error = "Archivo de entrada incorrecto: PAGINAS_SWAP debe ir antes de la primera operacion";
+        return false;
+    }
+    capacidadSwap_ = static_cast<int>(paginas);
+    return true;
+}
+
+int MemoryManager::obtenerMarco() {
+    if (paginasLibres_.vacio() && reemplazoActivo()) {
+        expulsarVictima();
+    }
+    int fisica = -1;
+    Page libre;
+    paginasLibres_.extraerMinimo(fisica, libre);
+    return fisica;
+}
+
+void MemoryManager::expulsarVictima() {
+    // La victima es la pagina en memoria fisica usada hace mas tiempo (LRU).
+    EntradaCache victima;
+    if (!marcos_.menosReciente(victima)) return;
+    marcos_.eliminar(victima.idProceso, victima.paginaVirtual);
+
+    Process* duenio = buscarProceso(victima.idProceso);
+    if (duenio == nullptr) return;
+    Page* pagina = duenio->getTabla().buscarSinSplay(victima.paginaVirtual);
+    if (pagina == nullptr) return;
+
+    int fisica = pagina->getPaginaFisica();
+    pagina->pasarASwap();
+    paginasEnSwap_++;
+    metricas_.reemplazos++;
+
+    // Ningun cache puede apuntar a una pagina que ya no esta en memoria fisica.
+    duenio->getCacheLocal().eliminar(victima.idProceso, victima.paginaVirtual);
+    cacheGlobal_.eliminar(victima.idProceso, victima.paginaVirtual);
+
+    paginasLibres_.insertar(fisica, Page(-1, fisica, ""));
+    eventos_.push_back("Reemplazo de pagina: LRU pasa " + victima.idProceso + ":"
+                       + texto(victima.paginaVirtual) + " (pagina fisica "
+                       + texto(fisica) + ") a swap");
+}
+
+void MemoryManager::marcarUso(const std::string& id, int paginaVirtual, int paginaFisica) {
+    EntradaCache entrada;
+    entrada.idProceso = id;
+    entrada.paginaVirtual = paginaVirtual;
+    entrada.paginaFisica = paginaFisica;
+    entrada.ultimaReferencia = reloj_;
+    marcos_.insertar(entrada, nullptr);
+}
+
+int MemoryManager::paginasEnSwapDe(const std::string& id) const {
+    Process* proceso = buscarProceso(id);
+    return (proceso == nullptr) ? 0 : contarEnSwap(*proceso);
+}
+
+bool MemoryManager::estaEnSwap(const std::string& id, int paginaVirtual) const {
+    Process* proceso = buscarProceso(id);
+    if (proceso == nullptr) return false;
+    Page* pagina = proceso->getTabla().buscarSinSplay(paginaVirtual);
+    return pagina != nullptr && !pagina->esValida();
 }
 
 // ------------------------------------------------------------
@@ -127,6 +260,7 @@ void MemoryManager::darPaginas(Process& proceso, long long cantidad) {
 
 bool MemoryManager::nuevoProceso(const std::string& id, long long memoria,
                                  std::string& error) {
+    eventos_.clear();
     if (id.empty()) {
         error = "Archivo de entrada incorrecto: falta el id del proceso";
         return false;
@@ -141,9 +275,7 @@ bool MemoryManager::nuevoProceso(const std::string& id, long long memoria,
     }
 
     long long necesarias = paginasPara(memoria, tamanoPagina_);
-    if (necesarias > paginasLibres()) {
-        error = "Memoria insuficiente: " + id + " necesita " + texto(necesarias)
-              + " paginas y solo hay " + texto(paginasLibres()) + " libres";
+    if (!alcanzanPaginas(id, necesarias, false, error)) {
         return false;
     }
 
@@ -159,6 +291,7 @@ bool MemoryManager::nuevoProceso(const std::string& id, long long memoria,
 // ------------------------------------------------------------
 
 bool MemoryManager::finalizarProceso(const std::string& id, std::string& error) {
+    eventos_.clear();
     Process* proceso = buscarProceso(id);
     if (proceso == nullptr) {
         error = "Proceso inexistente: " + id;
@@ -168,8 +301,14 @@ bool MemoryManager::finalizarProceso(const std::string& id, std::string& error) 
     // 1 y 5. Devolver todas sus paginas fisicas al AVL de libres.
     std::vector<std::pair<int, Page> > paginas = proceso->getTabla().recorrido();
     for (std::size_t i = 0; i < paginas.size(); i++) {
-        int fisica = paginas[i].second.getPaginaFisica();
-        paginasLibres_.insertar(fisica, Page(-1, fisica, ""));
+        const Page& pagina = paginas[i].second;
+        if (pagina.esValida()) {
+            int fisica = pagina.getPaginaFisica();
+            paginasLibres_.insertar(fisica, Page(-1, fisica, ""));
+            marcos_.eliminar(id, paginas[i].first);
+        } else {
+            paginasEnSwap_--;   // extra: estaba en swap; se libera su lugar
+        }
     }
 
     // 4. Quitar sus entradas del cache global.
@@ -192,6 +331,7 @@ bool MemoryManager::finalizarProceso(const std::string& id, std::string& error) 
 
 bool MemoryManager::acceder(const std::string& id, long long direccion,
                             ResultadoAcceso& resultado, std::string& error) {
+    eventos_.clear();
     // 1. El proceso debe existir.
     Process* proceso = buscarProceso(id);
     if (proceso == nullptr) {
@@ -233,10 +373,26 @@ bool MemoryManager::acceder(const std::string& id, long long direccion,
         return false;
     }
 
+    // Extra (reemplazo de paginas): si la pagina esta en swap es un fallo de
+    // pagina. Se trae a memoria fisica; si no hay paginas fisicas libres, LRU
+    // pasa otra a swap. (Una pagina en swap nunca esta en un cache.)
+    if (!pagina->esValida()) {
+        metricas_.fallosPagina++;
+        paginasEnSwap_--;
+        eventos_.push_back("Fallo de pagina: " + id + ":" + texto(paginaVirtual)
+                           + " estaba en swap");
+        int fisica = obtenerMarco();
+        pagina->cargarEnMarco(fisica);
+        eventos_.push_back(id + ":" + texto(paginaVirtual)
+                           + " se cargo en la pagina fisica " + texto(fisica));
+        resultado.falloPagina = true;
+    }
+
     // 6. Actualizar metricas y la informacion de la pagina.
     reloj_++;
     metricas_.accesos++;
     pagina->registrarReferencia(reloj_);
+    marcarUso(id, paginaVirtual, pagina->getPaginaFisica());
 
     resultado.paginaVirtual = paginaVirtual;
     resultado.desplazamiento = desplazamiento;
@@ -287,6 +443,7 @@ bool MemoryManager::acceder(const std::string& id, long long direccion,
 
 bool MemoryManager::asignarMemoria(const std::string& id, long long bytes,
                                    std::string& error) {
+    eventos_.clear();
     Process* proceso = buscarProceso(id);
     if (proceso == nullptr) {
         error = "Proceso inexistente: " + id;
@@ -298,9 +455,7 @@ bool MemoryManager::asignarMemoria(const std::string& id, long long bytes,
     }
 
     long long necesarias = paginasPara(bytes, tamanoPagina_);
-    if (necesarias > paginasLibres()) {
-        error = "Memoria insuficiente: " + id + " necesita " + texto(necesarias)
-              + " paginas mas y solo hay " + texto(paginasLibres()) + " libres";
+    if (!alcanzanPaginas(id, necesarias, true, error)) {
         return false;
     }
 
@@ -315,6 +470,7 @@ bool MemoryManager::asignarMemoria(const std::string& id, long long bytes,
 
 bool MemoryManager::liberarMemoria(const std::string& id, long long direccionInicial,
                                    long long bytes, std::string& error) {
+    eventos_.clear();
     Process* proceso = buscarProceso(id);
     if (proceso == nullptr) {
         error = "Proceso inexistente: " + id;
@@ -347,10 +503,16 @@ bool MemoryManager::liberarMemoria(const std::string& id, long long direccionIni
 
     for (long long v = primera; v <= ultima; v++) {
         int paginaVirtual = static_cast<int>(v);
-        int fisica = proceso->getTabla().buscar(paginaVirtual)->getPaginaFisica();
+        Page* pagina = proceso->getTabla().buscar(paginaVirtual);
+        if (pagina->esValida()) {
+            int fisica = pagina->getPaginaFisica();
+            paginasLibres_.insertar(fisica, Page(-1, fisica, ""));    // 3 y 4. AVL de libres
+            marcos_.eliminar(id, paginaVirtual);
+        } else {
+            paginasEnSwap_--;   // extra: estaba en swap; se libera su lugar
+        }
 
         proceso->getTabla().eliminar(paginaVirtual);              // 2. Splay Tree
-        paginasLibres_.insertar(fisica, Page(-1, fisica, ""));    // 3 y 4. AVL de libres
         proceso->getCacheLocal().eliminar(id, paginaVirtual);     // 5. caches
         cacheGlobal_.eliminar(id, paginaVirtual);
     }
@@ -382,6 +544,10 @@ void MemoryManager::mostrarEstado(std::ostream& salida) const {
     salida << "  Paginas fisicas: " << totalPaginas_
            << " | libres: " << paginasLibres()
            << " | ocupadas: " << paginasOcupadas() << "\n";
+    if (reemplazoActivo()) {
+        salida << "  Swap (memoria secundaria): " << paginasEnSwap_ << "/"
+               << capacidadSwap_ << " paginas usadas\n";
+    }
 
     salida << "  Paginas libres (AVL en orden): ";
     std::vector<std::pair<int, Page> > libres = paginasLibres_.inOrden();
@@ -402,7 +568,11 @@ void MemoryManager::mostrarEstado(std::ostream& salida) const {
                << " | paginas: " << proceso->paginasAsignadas()
                << " | cache local (" << proceso->getCacheLocal().tamano() << "/"
                << proceso->getCacheLocal().capacidad() << "): "
-               << contenidoCache(proceso->getCacheLocal()) << "\n";
+               << contenidoCache(proceso->getCacheLocal());
+        if (reemplazoActivo()) {
+            salida << " | en swap: " << listaSwap(*buscarProceso(ordenProcesos_[i]));
+        }
+        salida << "\n";
     }
 
     salida << "  Cache global (" << cacheGlobal_.tamano() << "/"
@@ -410,6 +580,10 @@ void MemoryManager::mostrarEstado(std::ostream& salida) const {
 
     salida << "  Hits/misses -> local: " << metricas_.hitsLocal << "/" << metricas_.missesLocal
            << " | global: " << metricas_.hitsGlobal << "/" << metricas_.missesGlobal << "\n";
+    if (reemplazoActivo()) {
+        salida << "  Fallos de pagina: " << metricas_.fallosPagina
+               << " | reemplazos: " << metricas_.reemplazos << "\n";
+    }
 }
 
 void MemoryManager::mostrarMetricas(std::ostream& salida) const {
@@ -420,6 +594,11 @@ void MemoryManager::mostrarMetricas(std::ostream& salida) const {
     salida << "  Misses en cache global:     " << metricas_.missesGlobal << "\n";
     salida << "  Paginas asignadas:          " << paginasOcupadas() << "\n";
     salida << "  Paginas libres:             " << paginasLibres() << "\n";
+    if (reemplazoActivo()) {
+        salida << "  Fallos de pagina:           " << metricas_.fallosPagina << "\n";
+        salida << "  Paginas reemplazadas:       " << metricas_.reemplazos << "\n";
+        salida << "  Paginas en swap:            " << paginasEnSwap_ << "/" << capacidadSwap_ << "\n";
+    }
 
     // Se guarda el formato del flujo y se restaura al final, para no afectar
     // lo que se imprima despues.
@@ -467,6 +646,12 @@ void MemoryManager::escribirMetricasCsv(std::ostream& salida) const {
     salida << "misses_cache_global," << metricas_.missesGlobal << "\n";
     salida << "paginas_asignadas," << paginasOcupadas() << "\n";
     salida << "paginas_libres," << paginasLibres() << "\n";
+    if (reemplazoActivo()) {
+        salida << "paginas_swap_capacidad," << capacidadSwap_ << "\n";
+        salida << "paginas_en_swap," << paginasEnSwap_ << "\n";
+        salida << "fallos_de_pagina," << metricas_.fallosPagina << "\n";
+        salida << "paginas_reemplazadas," << metricas_.reemplazos << "\n";
+    }
 
     std::ios_base::fmtflags formatoAnterior = salida.flags();
     std::streamsize precisionAnterior = salida.precision();
@@ -477,12 +662,16 @@ void MemoryManager::escribirMetricasCsv(std::ostream& salida) const {
 
     // Segunda tabla, separada por una linea vacia: un renglon por proceso activo.
     salida << "\n";
-    salida << "proceso,memoria_solicitada,paginas_asignadas,cache_local_usada,cache_local_capacidad\n";
+    salida << "proceso,memoria_solicitada,paginas_asignadas,cache_local_usada,cache_local_capacidad";
+    if (reemplazoActivo()) salida << ",paginas_en_swap";
+    salida << "\n";
     for (std::size_t i = 0; i < ordenProcesos_.size(); i++) {
-        const Process* proceso = buscarProceso(ordenProcesos_[i]);
+        Process* proceso = buscarProceso(ordenProcesos_[i]);
         salida << proceso->getId() << "," << proceso->getMemoriaSolicitada() << ","
                << proceso->paginasAsignadas() << ","
                << proceso->getCacheLocal().tamano() << ","
-               << proceso->getCacheLocal().capacidad() << "\n";
+               << proceso->getCacheLocal().capacidad();
+        if (reemplazoActivo()) salida << "," << contarEnSwap(*proceso);
+        salida << "\n";
     }
 }

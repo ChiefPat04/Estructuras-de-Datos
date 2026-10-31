@@ -169,6 +169,19 @@ static void pruebaMostrar() {
     verificar(a.contar() == 5 && a.estaEnRaiz(3), "mostrar no cambia el arbol");
 }
 
+// buscarSinSplay (la usa el reemplazo de paginas): encuentra sin mover la raiz.
+static void pruebaBuscarSinSplay() {
+    std::cout << "\n== Buscar sin splay ==\n";
+    Arbol a;
+    for (int i = 1; i <= 5; i++) a.insertar(i, "valor");
+    a.buscar(3);   // el 3 queda en la raiz
+    std::string* valor = a.buscarSinSplay(5);
+    verificar(valor != nullptr && *valor == "valor", "encuentra una clave que existe");
+    verificar(a.estaEnRaiz(3), "la raiz no cambia (no hace splay)");
+    verificar(a.buscarSinSplay(9) == nullptr && a.estaEnRaiz(3),
+              "una clave inexistente da nullptr y tampoco mueve la raiz");
+}
+
 int main() {
     std::cout << "=== PRUEBAS DEL SPLAY TREE ===\n";
 
@@ -180,6 +193,7 @@ int main() {
     pruebaEliminar();
     pruebaEstres();
     pruebaMostrar();
+    pruebaBuscarSinSplay();
 
     std::cout << "\nResultado: " << pasadas << " aprobadas, "
               << falladas << " falladas.\n";

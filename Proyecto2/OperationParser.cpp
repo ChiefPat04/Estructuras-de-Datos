@@ -82,7 +82,7 @@ namespace {
 
     bool esConfiguracion(const std::string& comando) {
         return comando == "MEMORIA_TOTAL" || comando == "TAMANO_PAGINA"
-            || comando == "TAMANO_CACHE_GLOBAL";
+            || comando == "TAMANO_CACHE_GLOBAL" || comando == "PAGINAS_SWAP";
     }
 
     // Formato de cada operacion y cuantos datos lleva despues del nombre.
@@ -108,6 +108,7 @@ OperationParser::OperationParser(std::ostream& salida)
     : salida_(salida), memoria_(),
       memoriaTotal_(0), tamanoPagina_(0), tamanoCacheGlobal_(0),
       hayMemoriaTotal_(false), hayTamanoPagina_(false), hayTamanoCache_(false),
+      paginasSwap_(0), haySwap_(false), huboOperacion_(false),
       operaciones_(0), errores_(0), errorFatal_(false) {}
 
 void OperationParser::reportarError(const std::string& mensaje) {
@@ -136,6 +137,7 @@ void OperationParser::mostrarAyuda(std::ostream& salida) {
            << "  ARBOL AVL                            dibuja el AVL de paginas libres\n"
            << "  ARBOL SPLAY idProceso                dibuja la tabla de paginas de un proceso\n"
            << "  EXPORTAR archivo.csv                 guarda las metricas en un archivo CSV\n"
+           << "  PAGINAS_SWAP n                       activa el reemplazo de paginas (antes de operar)\n"
            << "  SALIR                                termina la simulacion\n";
 }
 
@@ -145,6 +147,10 @@ void OperationParser::mostrarAyuda(std::ostream& salida) {
 
 bool OperationParser::procesarConfiguracion(const std::string& nombre,
                                             const std::vector<std::string>& palabras) {
+    if (nombre == "PAGINAS_SWAP") {
+        procesarSwap(palabras);   // es opcional: sus errores no detienen la simulacion
+        return true;
+    }
     if (memoria_ != nullptr) {
         // Cambiar la memoria a mitad de la simulacion no tiene sentido: se ignora.
         reportarError("Archivo de entrada incorrecto: la configuracion ya esta definida; "
@@ -195,9 +201,16 @@ bool OperationParser::crearMemoria() {
 
     memoria_.reset(new MemoryManager(memoriaTotal_, static_cast<int>(tamanoPagina_),
                                      static_cast<int>(tamanoCacheGlobal_)));
+    if (haySwap_) {
+        memoria_->configurarSwap(paginasSwap_, error);   // el valor ya se reviso al leerlo
+    }
     salida_ << "  Memoria configurada: " << memoriaTotal_ << " / " << tamanoPagina_
             << " = " << memoria_->paginasTotales() << " paginas fisicas"
             << " | cache global de " << tamanoCacheGlobal_ << " entradas\n";
+    if (memoria_->reemplazoActivo()) {
+        salida_ << "  Reemplazo de paginas activado: swap de " << memoria_->getCapacidadSwap()
+                << " paginas, victima elegida por LRU\n";
+    }
     salida_ << "  Estado inicial:\n";
     memoria_->mostrarEstado(salida_);
     return true;
@@ -272,6 +285,7 @@ bool OperationParser::procesarLinea(const std::string& lineaOriginal, int numero
 
 void OperationParser::ejecutarOperacion(const std::string& comando,
                                         const std::vector<std::string>& palabras) {
+    huboOperacion_ = true;
     std::string formato;
     std::size_t datos = 0;
     formatoDe(comando, formato, datos);
@@ -309,10 +323,15 @@ void OperationParser::ejecutarOperacion(const std::string& comando,
         }
     } else if (comando == "END_PROCESS") {
         int paginas = memoria_->paginasDe(id);
+        int enSwap = memoria_->paginasEnSwapDe(id);
         exito = memoria_->finalizarProceso(id, error);
-        if (exito) {
+        if (exito && !memoria_->reemplazoActivo()) {
             salida_ << "  Proceso " << id << " finalizado: sus " << paginas
                     << " paginas fisicas vuelven al AVL de libres\n";
+        } else if (exito) {
+            salida_ << "  Proceso " << id << " finalizado: " << (paginas - enSwap)
+                    << " paginas fisicas vuelven al AVL de libres y " << enSwap
+                    << " paginas salen de swap\n";
         }
     } else if (comando == "ACCESS") {
         ResultadoAcceso resultado;
@@ -351,6 +370,11 @@ void OperationParser::ejecutarOperacion(const std::string& comando,
     }
 
     operaciones_++;
+    // Extra: fallos de pagina y reemplazos que provoco la operacion.
+    const std::vector<std::string>& eventos = memoria_->getEventos();
+    for (std::size_t i = 0; i < eventos.size(); i++) {
+        salida_ << "  " << eventos[i] << "\n";
+    }
     salida_ << "  Estado de la memoria:\n";
     memoria_->mostrarEstado(salida_);
 }
@@ -516,4 +540,52 @@ void OperationParser::exportarMetricas(const std::vector<std::string>& palabras)
     }
     memoria_->escribirMetricasCsv(archivo);
     salida_ << "  Metricas exportadas a " << ruta << " (CSV: se puede abrir con Excel)\n";
+}
+
+// ------------------------------------------------------------
+// Extra: PAGINAS_SWAP (reemplazo de paginas)
+// ------------------------------------------------------------
+
+void OperationParser::procesarSwap(const std::vector<std::string>& palabras) {
+    long long valor = 0;
+    if (palabras.size() != 2 || !aEntero(palabras[1], valor)) {
+        reportarError("Archivo de entrada incorrecto: se esperaba 'PAGINAS_SWAP numero'; "
+                      "esta linea se ignora");
+        return;
+    }
+    if (haySwap_) {
+        reportarError("Archivo de entrada incorrecto: PAGINAS_SWAP aparece dos veces; "
+                      "esta linea se ignora");
+        return;
+    }
+    if (huboOperacion_) {
+        reportarError("Archivo de entrada incorrecto: PAGINAS_SWAP debe ir antes de la "
+                      "primera operacion; esta linea se ignora");
+        return;
+    }
+    if (valor < 0 || valor > MemoryManager::MAX_PAGINAS_SWAP) {
+        reportarError("Archivo de entrada incorrecto: PAGINAS_SWAP debe estar entre 0 y "
+                      + std::string("1048576; esta linea se ignora"));
+        return;
+    }
+
+    paginasSwap_ = valor;
+    haySwap_ = true;
+    salida_ << "  PAGINAS_SWAP = " << valor << "\n";
+
+    // Si la memoria ya existe (la configuracion obligatoria ya estaba), se
+    // activa de una vez; si no, se activa al crear la memoria.
+    if (memoria_ != nullptr) {
+        std::string error;
+        if (!memoria_->configurarSwap(valor, error)) {
+            reportarError(error + "; esta linea se ignora");
+            return;
+        }
+        if (memoria_->reemplazoActivo()) {
+            salida_ << "  Reemplazo de paginas activado: swap de " << valor
+                    << " paginas, victima elegida por LRU\n";
+        } else {
+            salida_ << "  Reemplazo de paginas desactivado (0 paginas de swap)\n";
+        }
+    }
 }

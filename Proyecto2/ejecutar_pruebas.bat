@@ -1,7 +1,7 @@
 @echo off
 REM ============================================================
 REM ejecutar_pruebas.bat - compila el simulador y lo ejecuta con los
-REM tres archivos de entrada. La salida de cada uno se guarda en un
+REM archivos de entrada. La salida de cada uno se guarda en un
 REM archivo salida_XXX.txt: esas son las evidencias de ejecucion.
 REM ============================================================
 echo Compilando...
@@ -25,12 +25,16 @@ proyecto.exe entrada_error_config.txt > salida_error_config.txt
 echo Ejecutando entrada_extras.txt          (ARBOL y EXPORTAR)...
 proyecto.exe entrada_extras.txt > salida_extras.txt
 
+echo Ejecutando entrada_reemplazo.txt       (reemplazo de paginas)...
+proyecto.exe entrada_reemplazo.txt > salida_reemplazo.txt
+
 echo.
 echo Listo. Se crearon:
 echo   salida_prueba.txt
 echo   salida_casos.txt
 echo   salida_error_config.txt
 echo   salida_extras.txt
+echo   salida_reemplazo.txt
 echo   metricas.csv (se abre con Excel)
 echo Abralos con el Bloc de notas o VS Code para revisar la salida.
 pause

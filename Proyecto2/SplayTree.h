@@ -210,6 +210,24 @@ public:
         return nullptr;
     }
 
+    // Busca la clave SIN hacer splay: el arbol no cambia de forma.
+    // La usa el reemplazo de paginas para tocar la pagina victima sin
+    // alterar la tabla de su proceso (la raiz debe seguir siendo la ultima
+    // pagina que el proceso uso).
+    V* buscarSinSplay(const K& clave) {
+        Nodo* actual = raiz_;
+        while (actual != nullptr) {
+            if (clave < actual->clave) {
+                actual = actual->izq;
+            } else if (actual->clave < clave) {
+                actual = actual->der;
+            } else {
+                return &(actual->valor);
+            }
+        }
+        return nullptr;
+    }
+
     // Dice si la clave existe (tambien la sube a la raiz).
     bool contiene(const K& clave) {
         return buscar(clave) != nullptr;

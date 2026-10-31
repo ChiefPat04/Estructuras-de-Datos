@@ -13,7 +13,7 @@ private:
     int paginaVirtual_;
     int paginaFisica_;
     std::string idProceso_;
-    bool valida_;                 // true si esta asignada a un proceso
+    bool valida_;                 // true si esta en memoria fisica (false si esta libre o en swap)
     bool modificada_;
     int contadorReferencias_;     // cuantas veces se ha accedido
     long long ultimaReferencia_;  // "reloj" de la simulacion en el ultimo acceso
@@ -33,6 +33,11 @@ public:
     // Se llama cada vez que la pagina es accedida.
     void registrarReferencia(long long reloj);
     void marcarModificada() { modificada_ = true; }
+
+    // Extra (reemplazo de paginas): la pagina sale de memoria fisica a swap
+    // (ya no tiene pagina fisica) o vuelve de swap a una pagina fisica.
+    void pasarASwap() { paginaFisica_ = -1; valida_ = false; }
+    void cargarEnMarco(int paginaFisica) { paginaFisica_ = paginaFisica; valida_ = true; }
 };
 
 #endif

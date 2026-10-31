@@ -203,6 +203,65 @@ static void pruebaArbolYExportar() {
               "ARBOL antes de la configuracion da error");
 }
 
+static void pruebaReemplazo() {
+    std::cout << "\n== Extra: PAGINAS_SWAP (reemplazo de paginas) ==\n";
+    std::istringstream entrada(
+        "MEMORIA_TOTAL 4096\nTAMANO_PAGINA 1024\nTAMANO_CACHE_GLOBAL 2\nPAGINAS_SWAP 4\n"
+        "NEW_PROCESS P1 2048\nNEW_PROCESS P2 2048\nACCESS P1 0\nNEW_PROCESS P3 2048\n"
+        "ACCESS P1 1024\nEND_PROCESS P2\nPAGINAS_SWAP 8\n");
+    std::ostringstream salida;
+    OperationParser parser(salida);
+    verificar(parser.procesarFlujo(entrada) && parser.getErrores() == 1,
+              "la simulacion termina; solo el PAGINAS_SWAP tardio es error");
+    std::string texto = salida.str();
+    verificar(contiene(texto, "Reemplazo de paginas activado: swap de 4 paginas"), "informa que el reemplazo esta activo");
+    verificar(contiene(texto, "Reemplazo de pagina: LRU pasa P1:1 (pagina fisica 1) a swap"),
+              "informa cada pagina que pasa a swap");
+    verificar(contiene(texto, "Fallo de pagina: P1:1 estaba en swap")
+              && contiene(texto, "P1:1 se cargo en la pagina fisica 3"), "informa el fallo de pagina");
+    verificar(contiene(texto, "0 paginas fisicas vuelven al AVL de libres y 2 paginas salen de swap"),
+              "END_PROCESS distingue paginas fisicas y paginas en swap");
+    verificar(contiene(texto, "PAGINAS_SWAP aparece dos veces"),
+              "un segundo PAGINAS_SWAP se rechaza");
+    verificar(parser.getMemoria()->getMetricas().fallosPagina == 1
+              && parser.getMemoria()->getCapacidadSwap() == 4, "las metricas y el swap son correctos");
+
+    std::istringstream primero("PAGINAS_SWAP 2\n" + CONFIG);
+    std::ostringstream salida2;
+    OperationParser parser2(salida2);
+    verificar(parser2.procesarFlujo(primero) && parser2.getMemoria()->getCapacidadSwap() == 2,
+              "PAGINAS_SWAP puede ir antes que los demas parametros");
+
+    std::istringstream errores(CONFIG + "PAGINAS_SWAP abc\nPAGINAS_SWAP -5\nPAGINAS_SWAP 3\nPAGINAS_SWAP 3\n");
+    std::ostringstream salida3;
+    OperationParser parser3(salida3);
+    verificar(parser3.procesarFlujo(errores) && parser3.getErrores() == 3
+              && parser3.getMemoria()->getCapacidadSwap() == 3,
+              "letras, negativos y repetidos dan error, pero no detienen la simulacion");
+
+    std::istringstream tarde(CONFIG + "NEW_PROCESS P1 1024\nPAGINAS_SWAP 4\n");
+    std::ostringstream salida6;
+    OperationParser parser6(salida6);
+    verificar(parser6.procesarFlujo(tarde) && !parser6.getMemoria()->reemplazoActivo()
+              && contiene(salida6.str(), "PAGINAS_SWAP debe ir antes de la primera operacion"),
+              "PAGINAS_SWAP despues de la primera operacion se rechaza");
+
+    std::istringstream sinSwap(CONFIG);
+    std::ostringstream salida4;
+    OperationParser parser4(salida4);
+    verificar(parser4.procesarFlujo(sinSwap) && !parser4.getMemoria()->reemplazoActivo(),
+              "sin PAGINAS_SWAP el reemplazo queda apagado");
+
+    std::istringstream teclado("4096\n1024\n2\nPAGINAS_SWAP 4\nNEW_PROCESS P1 4096\n"
+                               "NEW_PROCESS P2 1024\nSALIR\n");
+    std::ostringstream salida5;
+    OperationParser parser5(salida5);
+    parser5.procesarConsola(teclado);
+    verificar(parser5.getMemoria()->reemplazoActivo()
+              && contiene(salida5.str(), "Reemplazo de pagina: LRU pasa P1:0"),
+              "en modo consola tambien se activa escribiendo PAGINAS_SWAP");
+}
+
 int main() {
     std::cout << "=== PRUEBAS DEL LECTOR DE OPERACIONES ===\n";
 
@@ -215,6 +274,7 @@ int main() {
     pruebaSalir();
     pruebaConsola();
     pruebaArbolYExportar();
+    pruebaReemplazo();
 
     std::cout << "\nResultado: " << pasadas << " aprobadas, "
               << falladas << " falladas.\n";

@@ -248,6 +248,131 @@ static void caso12MultiplesProcesos() {
               "un proceso nuevo reutiliza la pagina fisica 0 que libero P1");
 }
 
+// ============================================================
+// Extra: reemplazo de paginas (swap)
+// ============================================================
+
+// Con reemplazo, cada pagina de un proceso esta en memoria fisica o en swap.
+// Revisa que las cuentas cuadren y que el swap no pase de su capacidad.
+static bool cuentasCuadran(const MemoryManager& m, const std::vector<std::string>& ids) {
+    int enFisica = 0;
+    int enSwap = 0;
+    for (std::size_t i = 0; i < ids.size(); i++) {
+        if (!m.existeProceso(ids[i])) continue;
+        enFisica += m.paginasDe(ids[i]) - m.paginasEnSwapDe(ids[i]);
+        enSwap += m.paginasEnSwapDe(ids[i]);
+    }
+    return enFisica == m.paginasOcupadas() && enSwap == m.paginasEnSwap()
+        && m.paginasEnSwap() <= m.getCapacidadSwap()
+        && m.paginasOcupadas() + m.paginasLibres() == m.paginasTotales();
+}
+
+static void extraReemplazoConfiguracion() {
+    std::cout << "\n== Extra: configurar el reemplazo de paginas ==\n";
+    MemoryManager m(MEMORIA, PAGINA, 8);
+    std::string error;
+    verificar(!m.reemplazoActivo(), "por defecto el reemplazo esta apagado");
+    verificar(!m.configurarSwap(-1, error) && !m.reemplazoActivo(), "un swap negativo se rechaza");
+    verificar(m.configurarSwap(16, error) && m.reemplazoActivo() && m.getCapacidadSwap() == 16,
+              "PAGINAS_SWAP 16 lo activa");
+    m.nuevoProceso("P1", 1024, error);
+    verificar(!m.configurarSwap(8, error) && m.getCapacidadSwap() == 16,
+              "despues de la primera operacion ya no se puede cambiar");
+
+    MemoryManager sinSwap(4096, PAGINA, 2);
+    sinSwap.nuevoProceso("P1", 4096, error);
+    verificar(!sinSwap.nuevoProceso("P2", 1024, error) && empiezaCon(error, "Memoria insuficiente")
+              && sinSwap.paginasEnSwap() == 0,
+              "sin swap, la memoria llena sigue dando Memoria insuficiente");
+}
+
+static void extraReemplazoVictimaYFallo() {
+    std::cout << "\n== Extra: victima LRU, fallo de pagina y swap lleno ==\n";
+    // 4 paginas fisicas, swap de 4, cache global de 2.
+    MemoryManager m(4096, PAGINA, 2);
+    std::string error;
+    std::vector<std::string> ids;
+    ids.push_back("P1"); ids.push_back("P2"); ids.push_back("P3"); ids.push_back("P5");
+    m.configurarSwap(4, error);
+    m.nuevoProceso("P1", 2048, error);    // fisicas 0 y 1
+    m.nuevoProceso("P2", 2048, error);    // fisicas 2 y 3: memoria llena
+    ResultadoAcceso r;
+    m.acceder("P1", 0, r, error);         // P1:0 pasa a ser la mas reciente
+
+    verificar(m.nuevoProceso("P3", 2048, error), "con swap, un proceso entra aunque la memoria este llena");
+    verificar(m.estaEnSwap("P1", 1) && m.estaEnSwap("P2", 0) && !m.estaEnSwap("P1", 0),
+              "LRU pasa a swap P1:1 y P2:0; P1:0 se salva porque se acababa de usar");
+    verificar(m.paginasEnSwap() == 2 && m.getMetricas().reemplazos == 2 && m.paginasLibres() == 0,
+              "2 paginas en swap, 2 reemplazos y 0 paginas fisicas libres");
+    verificar(m.getEventos().size() == 2, "la operacion informa los 2 reemplazos");
+    verificar(cuentasCuadran(m, ids), "cada pagina esta en memoria fisica o en swap");
+
+    ResultadoAcceso fallo;
+    verificar(m.acceder("P1", 1024, fallo, error) && fallo.falloPagina && fallo.paginaFisica == 3,
+              "ACCESS a P1:1 es fallo de pagina y la carga en la pagina fisica 3");
+    verificar(m.estaEnSwap("P2", 1) && !m.estaEnSwap("P1", 1),
+              "para hacerle espacio, LRU pasa P2:1 a swap");
+    verificar(m.getMetricas().fallosPagina == 1 && m.getMetricas().reemplazos == 3,
+              "1 fallo de pagina y 3 reemplazos en total");
+    ResultadoAcceso otra;
+    verificar(m.acceder("P1", 1024, otra, error) && !otra.falloPagina && otra.hitLocal,
+              "el siguiente acceso a P1:1 ya es HIT en cache local");
+
+    verificar(m.nuevoProceso("P5", 1024, error) && m.estaEnSwap("P1", 0)
+              && !cacheTiene(m.getCacheGlobal(), "P1", 0),
+              "si la victima estaba en un cache, tambien sale del cache");
+    verificar(!m.nuevoProceso("P6", 2048, error) && empiezaCon(error, "Memoria insuficiente")
+              && error.find("libres en swap") != std::string::npos && m.paginasEnSwap() == 3,
+              "si tampoco cabe en swap: Memoria insuficiente y nada cambia");
+    verificar(!m.nuevoProceso("P7", 5000, error) && error.find("solo tiene 4") != std::string::npos,
+              "no se puede pedir de una vez mas paginas que las fisicas");
+
+    verificar(m.liberarMemoria("P1", 0, 1024, error) && m.paginasEnSwap() == 2 && m.paginasLibres() == 0,
+              "FREE de una pagina en swap libera su lugar en swap");
+    verificar(m.finalizarProceso("P2", error) && m.paginasEnSwap() == 0 && m.paginasLibres() == 0,
+              "END_PROCESS de un proceso con todo en swap vacia el swap");
+    verificar(cuentasCuadran(m, ids), "las cuentas siguen cuadrando");
+    m.finalizarProceso("P1", error);
+    m.finalizarProceso("P3", error);
+    m.finalizarProceso("P5", error);
+    verificar(m.paginasLibres() == 4 && m.paginasEnSwap() == 0,
+              "al terminar todos, las 4 paginas fisicas quedan libres y el swap vacio");
+}
+
+static void extraReemplazoEstres() {
+    std::cout << "\n== Extra: reemplazo con 1000 accesos ==\n";
+    // 8 paginas fisicas y swap de 6; los procesos piden 13 paginas en total.
+    MemoryManager m(8192, PAGINA, 3);
+    std::string error;
+    m.configurarSwap(6, error);
+    std::vector<std::string> ids;
+    ids.push_back("P1"); ids.push_back("P2"); ids.push_back("P3"); ids.push_back("P4");
+    int paginas[4] = {3, 3, 3, 4};
+    bool creados = true;
+    for (int i = 0; i < 4; i++) {
+        creados = creados && m.nuevoProceso(ids[i], paginas[i] * 1024LL, error);
+    }
+    verificar(creados && m.paginasEnSwap() == 5, "13 paginas en 8 fisicas: 5 quedan en swap");
+
+    bool todoBien = true;
+    unsigned int semilla = 12345;
+    for (int k = 0; k < 1000; k++) {
+        semilla = semilla * 1103515245u + 12345u;            // numeros "al azar" repetibles
+        int p = static_cast<int>((semilla >> 16) % 4);
+        int direccion = static_cast<int>((semilla >> 4) % (paginas[p] * 1024));
+        ResultadoAcceso r;
+        if (!m.acceder(ids[p], direccion, r, error) || r.paginaFisica < 0
+            || !cuentasCuadran(m, ids)) {
+            todoBien = false;
+        }
+    }
+    verificar(todoBien, "los 1000 accesos funcionan y las cuentas siempre cuadran");
+    verificar(m.getMetricas().fallosPagina > 0 && m.paginasEnSwap() == 5,
+              "hubo fallos de pagina y el swap mantiene 5 paginas");
+    for (int i = 0; i < 4; i++) m.finalizarProceso(ids[i], error);
+    verificar(m.paginasLibres() == 8 && m.paginasEnSwap() == 0, "al final todo queda libre");
+}
+
 int main() {
     std::cout << "=== PRUEBAS DEL SIMULADOR DE MEMORIA ===\n";
 
@@ -263,6 +388,9 @@ int main() {
     caso10LlenadoCacheGlobal();
     caso11ReemplazoLRU();
     caso12MultiplesProcesos();
+    extraReemplazoConfiguracion();
+    extraReemplazoVictimaYFallo();
+    extraReemplazoEstres();
 
     std::cout << "\nResultado: " << pasadas << " aprobadas, "
               << falladas << " falladas.\n";

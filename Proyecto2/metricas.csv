@@ -1,0 +1,15 @@
+metrica,valor
+memoria_total,65536
+tamano_pagina,1024
+paginas_fisicas,64
+accesos_totales,2
+hits_cache_local,0
+misses_cache_local,2
+hits_cache_global,0
+misses_cache_global,2
+paginas_asignadas,10
+paginas_libres,54
+utilizacion_porcentaje,15.62
+
+proceso,memoria_solicitada,paginas_asignadas,cache_local_usada,cache_local_capacidad
+P1,10240,10,1,2

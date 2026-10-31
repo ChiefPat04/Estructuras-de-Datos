@@ -63,6 +63,10 @@ public:
     // Devuelve cuantas expulso.
     int redimensionar(int nuevaCapacidad);
 
+    // Copia en 'salida' la entrada menos reciente (la que LRU expulsaria),
+    // sin quitarla. Devuelve false si el cache esta vacio.
+    bool menosReciente(EntradaCache& salida) const;
+
     // Entradas en orden de uso: primero la mas reciente.
     std::vector<EntradaCache> contenido() const;
 
