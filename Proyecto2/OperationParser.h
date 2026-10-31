@@ -13,6 +13,7 @@
 //   ALLOCATE idProceso bytes
 //   FREE idProceso direccionInicial bytes
 //   ESTADO | METRICAS | AYUDA | SALIR                           (extras)
+//   ARBOL AVL | ARBOL SPLAY idProceso | EXPORTAR archivo.csv    (extras)
 // - Las lineas vacias se ignoran.
 // - Todo lo que esta despues de '#' es un comentario.
 // - Los comandos aceptan mayusculas o minusculas; los id de proceso no.
@@ -58,6 +59,10 @@ private:
     // Solo para la consola: pide un numero hasta que escriban uno valido.
     bool pedirNumero(std::istream& entrada, const std::string& mensaje, long long& valor);
     bool pedirConfiguracion(std::istream& entrada);
+
+    // Extras: ARBOL (dibuja los arboles) y EXPORTAR (guarda las metricas en CSV).
+    void mostrarArbol(const std::vector<std::string>& palabras);
+    void exportarMetricas(const std::vector<std::string>& palabras);
 
 public:
     explicit OperationParser(std::ostream& salida);

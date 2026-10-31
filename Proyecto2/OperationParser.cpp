@@ -133,6 +133,9 @@ void OperationParser::mostrarAyuda(std::ostream& salida) {
            << "  ESTADO                               muestra el estado de la memoria\n"
            << "  METRICAS                             muestra las metricas\n"
            << "  AYUDA                                muestra esta lista\n"
+           << "  ARBOL AVL                            dibuja el AVL de paginas libres\n"
+           << "  ARBOL SPLAY idProceso                dibuja la tabla de paginas de un proceso\n"
+           << "  EXPORTAR archivo.csv                 guarda las metricas en un archivo CSV\n"
            << "  SALIR                                termina la simulacion\n";
 }
 
@@ -225,6 +228,17 @@ bool OperationParser::procesarLinea(const std::string& lineaOriginal, int numero
     }
     if (comando == "AYUDA") {
         mostrarAyuda(salida_);
+        return true;
+    }
+    if (comando == "ARBOL" || comando == "EXPORTAR") {
+        if (memoria_ == nullptr) {
+            reportarError("Archivo de entrada incorrecto: antes de " + comando
+                          + " falta definir" + configuracionFaltante());
+        } else if (comando == "ARBOL") {
+            mostrarArbol(palabras);
+        } else {
+            exportarMetricas(palabras);
+        }
         return true;
     }
 
@@ -459,4 +473,47 @@ void OperationParser::mostrarResumen() const {
     memoria_->mostrarMetricas(salida_);
     salida_ << "\nEstado final de la memoria:\n";
     memoria_->mostrarEstado(salida_);
+}
+
+// ------------------------------------------------------------
+// Extras: ARBOL y EXPORTAR
+// ------------------------------------------------------------
+
+void OperationParser::mostrarArbol(const std::vector<std::string>& palabras) {
+    std::string tipo = (palabras.size() >= 2) ? aMayusculas(palabras[1]) : "";
+
+    if (palabras.size() == 2 && tipo == "AVL") {
+        salida_ << "  AVL de paginas fisicas libres (clave = numero de pagina).\n"
+                << "  La raiz es la linea sin sangria; los hijos de la derecha van arriba\n"
+                << "  y los de la izquierda abajo.\n";
+        memoria_->mostrarArbolLibres(salida_);
+        return;
+    }
+    if (palabras.size() == 3 && tipo == "SPLAY") {
+        const std::string& id = palabras[2];
+        if (!memoria_->existeProceso(id)) {
+            reportarError("Proceso inexistente: " + id);
+            return;
+        }
+        salida_ << "  Splay Tree de " << id << " (clave = pagina virtual).\n"
+                << "  La raiz es la linea sin sangria; suele ser la pagina usada mas recientemente.\n";
+        memoria_->mostrarArbolProceso(id, salida_);
+        return;
+    }
+    reportarError("Archivo de entrada incorrecto: el formato es 'ARBOL AVL' o 'ARBOL SPLAY idProceso'");
+}
+
+void OperationParser::exportarMetricas(const std::vector<std::string>& palabras) {
+    if (palabras.size() != 2) {
+        reportarError("Archivo de entrada incorrecto: el formato es 'EXPORTAR nombreArchivo.csv'");
+        return;
+    }
+    const std::string& ruta = palabras[1];
+    std::ofstream archivo(ruta.c_str());
+    if (!archivo) {
+        reportarError("No se pudo crear el archivo '" + ruta + "'");
+        return;
+    }
+    memoria_->escribirMetricasCsv(archivo);
+    salida_ << "  Metricas exportadas a " << ruta << " (CSV: se puede abrir con Excel)\n";
 }

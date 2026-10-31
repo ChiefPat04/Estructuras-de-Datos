@@ -145,6 +145,30 @@ static void pruebaEstres() {
     verificar(a.contar() == 51, "quedan 51 pares");
 }
 
+// Mostrar: un renglon por nodo, y la raiz (la ultima clave consultada) sin sangria.
+static void pruebaMostrar() {
+    std::cout << "\n== Mostrar (dibujo del arbol) ==\n";
+    Arbol vacio;
+    std::ostringstream sinNada;
+    vacio.mostrar(sinNada);
+    verificar(sinNada.str().empty(), "un arbol vacio no dibuja nada");
+
+    Arbol a;
+    for (int i = 1; i <= 5; i++) a.insertar(i, "v");
+    a.buscar(3);   // el 3 pasa a la raiz
+    std::ostringstream dibujo;
+    a.mostrar(dibujo);
+    std::string texto = dibujo.str();
+    int renglones = 0;
+    for (std::size_t i = 0; i < texto.size(); i++) {
+        if (texto[i] == '\n') renglones++;
+    }
+    verificar(renglones == 5, "se dibuja un renglon por cada nodo");
+    verificar(texto.find("\n3\n") != std::string::npos || texto.compare(0, 2, "3\n") == 0,
+              "la clave consultada (3) aparece sin sangria, como raiz");
+    verificar(a.contar() == 5 && a.estaEnRaiz(3), "mostrar no cambia el arbol");
+}
+
 int main() {
     std::cout << "=== PRUEBAS DEL SPLAY TREE ===\n";
 
@@ -155,6 +179,7 @@ int main() {
     pruebaBuscarInexistente();
     pruebaEliminar();
     pruebaEstres();
+    pruebaMostrar();
 
     std::cout << "\nResultado: " << pasadas << " aprobadas, "
               << falladas << " falladas.\n";

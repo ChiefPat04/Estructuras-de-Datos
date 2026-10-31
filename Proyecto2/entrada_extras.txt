@@ -1,0 +1,23 @@
+# ============================================================
+# entrada_extras.txt - ejemplo de los extras: ARBOL y EXPORTAR.
+# ARBOL AVL              dibuja el AVL de paginas fisicas libres
+# ARBOL SPLAY idProceso  dibuja la tabla de paginas (Splay Tree) de un proceso
+# EXPORTAR archivo.csv   guarda las metricas en un archivo CSV
+# ============================================================
+MEMORIA_TOTAL 65536
+TAMANO_PAGINA 1024
+TAMANO_CACHE_GLOBAL 8
+
+NEW_PROCESS P1 4096
+NEW_PROCESS P2 8192
+ACCESS P1 2500
+ACCESS P2 7000
+ALLOCATE P1 6144
+
+ARBOL AVL
+ARBOL SPLAY P1
+ARBOL SPLAY P2
+ARBOL SPLAY P9          # error: el proceso no existe
+
+END_PROCESS P2
+EXPORTAR metricas.csv

@@ -134,6 +134,16 @@ private:
     }
 
     // Postorden: los hijos se borran antes que el padre.
+    // Dibuja el arbol de lado, igual que AVLTree::mostrar: la raiz queda sin
+    // sangria, el hijo derecho aparece arriba y el izquierdo abajo.
+    void mostrarRec(std::ostream& salida, const Nodo* n, int nivel) const {
+        if (n == nullptr) return;
+        mostrarRec(salida, n->der, nivel + 1);
+        salida << std::string(static_cast<std::size_t>(nivel * 6), ' ')
+               << n->clave << "\n";
+        mostrarRec(salida, n->izq, nivel + 1);
+    }
+
     void destruirRec(Nodo* n) {
         if (n == nullptr) return;
         destruirRec(n->izq);
@@ -244,6 +254,9 @@ public:
     }
 
     int altura() const { return alturaRec(raiz_); }
+
+    // Dibuja el arbol (no lo modifica: no hace splay).
+    void mostrar(std::ostream& salida) const { mostrarRec(salida, raiz_, 0); }
     int contar() const { return cantidad_; }
     bool vacio() const { return raiz_ == nullptr; }
 

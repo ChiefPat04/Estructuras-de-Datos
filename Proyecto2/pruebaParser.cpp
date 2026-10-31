@@ -3,7 +3,10 @@
 // y la salida se guarda en un ostringstream para revisarla.
 // Tiene su propio main, se compila aparte con probar_parser.bat
 
+#include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include "OperationParser.h"
@@ -166,6 +169,40 @@ static void pruebaConsola() {
     verificar(contiene(texto, "'abc' no es un numero entero valido"), "da el mismo error de formato que el modo archivo");
 }
 
+static void pruebaArbolYExportar() {
+    std::cout << "\n== Extras: ARBOL y EXPORTAR ==\n";
+    std::istringstream entrada(CONFIG +
+        "NEW_PROCESS P1 4096\nACCESS P1 2500\n"
+        "ARBOL AVL\nARBOL SPLAY P1\nARBOL SPLAY P9\nARBOL\n"
+        "EXPORTAR metricas_prueba.csv\nEXPORTAR\n");
+    std::ostringstream salida;
+    OperationParser parser(salida);
+    verificar(parser.procesarFlujo(entrada), "la simulacion llega hasta el final");
+    verificar(parser.getOperaciones() == 2 && parser.getErrores() == 3,
+              "ARBOL y EXPORTAR no cuentan como operaciones; hay 3 errores");
+    std::string texto = salida.str();
+    verificar(contiene(texto, "AVL de paginas fisicas libres"), "ARBOL AVL dibuja el arbol de libres");
+    verificar(contiene(texto, "Splay Tree de P1"), "ARBOL SPLAY P1 dibuja la tabla del proceso");
+    verificar(contiene(texto, "Proceso inexistente: P9"), "ARBOL SPLAY con proceso inexistente da error");
+    verificar(contiene(texto, "el formato es 'ARBOL AVL'"), "ARBOL sin datos da error de formato");
+    verificar(contiene(texto, "Metricas exportadas a metricas_prueba.csv"), "EXPORTAR confirma el archivo");
+    verificar(contiene(texto, "el formato es 'EXPORTAR nombreArchivo.csv'"), "EXPORTAR sin archivo da error de formato");
+
+    std::ifstream csv("metricas_prueba.csv");
+    std::string contenidoCsv((std::istreambuf_iterator<char>(csv)), std::istreambuf_iterator<char>());
+    verificar(contiene(contenidoCsv, "metrica,valor\n") && contiene(contenidoCsv, "accesos_totales,1")
+              && contiene(contenidoCsv, "P1,4096,4,"),
+              "el CSV tiene las metricas y una fila por proceso");
+    csv.close();
+    std::remove("metricas_prueba.csv");
+
+    std::istringstream sinConfig("ARBOL AVL\n");
+    std::ostringstream salida2;
+    OperationParser parser2(salida2);
+    verificar(!parser2.procesarFlujo(sinConfig) && contiene(salida2.str(), "antes de ARBOL falta definir"),
+              "ARBOL antes de la configuracion da error");
+}
+
 int main() {
     std::cout << "=== PRUEBAS DEL LECTOR DE OPERACIONES ===\n";
 
@@ -177,6 +214,7 @@ int main() {
     pruebaArchivoInexistente();
     pruebaSalir();
     pruebaConsola();
+    pruebaArbolYExportar();
 
     std::cout << "\nResultado: " << pasadas << " aprobadas, "
               << falladas << " falladas.\n";

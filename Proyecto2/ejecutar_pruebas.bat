@@ -22,10 +22,15 @@ proyecto.exe entrada_casos.txt > salida_casos.txt
 echo Ejecutando entrada_error_config.txt (configuracion invalida)...
 proyecto.exe entrada_error_config.txt > salida_error_config.txt
 
+echo Ejecutando entrada_extras.txt          (ARBOL y EXPORTAR)...
+proyecto.exe entrada_extras.txt > salida_extras.txt
+
 echo.
 echo Listo. Se crearon:
 echo   salida_prueba.txt
 echo   salida_casos.txt
 echo   salida_error_config.txt
+echo   salida_extras.txt
+echo   metricas.csv (se abre con Excel)
 echo Abralos con el Bloc de notas o VS Code para revisar la salida.
 pause

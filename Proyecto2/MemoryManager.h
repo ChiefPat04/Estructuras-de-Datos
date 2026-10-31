@@ -101,6 +101,11 @@ public:
     // ---- Salida ----
     void mostrarEstado(std::ostream& salida) const;
     void mostrarMetricas(std::ostream& salida) const;
+
+    // ---- Extras: visualizacion y exportacion ----
+    void mostrarArbolLibres(std::ostream& salida) const;               // ARBOL AVL
+    bool mostrarArbolProceso(const std::string& id, std::ostream& salida) const;  // ARBOL SPLAY
+    void escribirMetricasCsv(std::ostream& salida) const;              // EXPORTAR
 };
 
 #endif

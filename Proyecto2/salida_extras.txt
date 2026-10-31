@@ -1,0 +1,208 @@
+Leyendo operaciones del archivo: entrada_extras.txt
+
+------------------------------------------------------------
+[Linea 7] MEMORIA_TOTAL 65536
+  MEMORIA_TOTAL = 65536
+
+------------------------------------------------------------
+[Linea 8] TAMANO_PAGINA 1024
+  TAMANO_PAGINA = 1024
+
+------------------------------------------------------------
+[Linea 9] TAMANO_CACHE_GLOBAL 8
+  TAMANO_CACHE_GLOBAL = 8
+  Memoria configurada: 65536 / 1024 = 64 paginas fisicas | cache global de 8 entradas
+  Estado inicial:
+  Paginas fisicas: 64 | libres: 64 | ocupadas: 0
+  Paginas libres (AVL en orden): 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos: ninguno
+  Cache global (0/8): []
+  Hits/misses -> local: 0/0 | global: 0/0
+
+------------------------------------------------------------
+[Linea 11] NEW_PROCESS P1 4096
+  Proceso P1 creado con 4 paginas (virtuales 0-3), cache local de 1
+  Estado de la memoria:
+  Paginas fisicas: 64 | libres: 60 | ocupadas: 4
+  Paginas libres (AVL en orden): 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos:
+    P1 | memoria solicitada: 4096 bytes | paginas: 4 | cache local (0/1): []
+  Cache global (0/8): []
+  Hits/misses -> local: 0/0 | global: 0/0
+
+------------------------------------------------------------
+[Linea 12] NEW_PROCESS P2 8192
+  Proceso P2 creado con 8 paginas (virtuales 0-7), cache local de 1
+  Estado de la memoria:
+  Paginas fisicas: 64 | libres: 52 | ocupadas: 12
+  Paginas libres (AVL en orden): 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos:
+    P1 | memoria solicitada: 4096 bytes | paginas: 4 | cache local (0/1): []
+    P2 | memoria solicitada: 8192 bytes | paginas: 8 | cache local (0/1): []
+  Cache global (0/8): []
+  Hits/misses -> local: 0/0 | global: 0/0
+
+------------------------------------------------------------
+[Linea 13] ACCESS P1 2500
+  Pagina virtual: 2
+  Desplazamiento: 452
+  Resultado: MISS en cache local, MISS en cache global (se obtuvo del Splay Tree)
+  Pagina fisica: 2
+  Estado de la memoria:
+  Paginas fisicas: 64 | libres: 52 | ocupadas: 12
+  Paginas libres (AVL en orden): 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos:
+    P1 | memoria solicitada: 4096 bytes | paginas: 4 | cache local (1/1): [P1:2->2]
+    P2 | memoria solicitada: 8192 bytes | paginas: 8 | cache local (0/1): []
+  Cache global (1/8): [P1:2->2]
+  Hits/misses -> local: 0/1 | global: 0/1
+
+------------------------------------------------------------
+[Linea 14] ACCESS P2 7000
+  Pagina virtual: 6
+  Desplazamiento: 856
+  Resultado: MISS en cache local, MISS en cache global (se obtuvo del Splay Tree)
+  Pagina fisica: 10
+  Estado de la memoria:
+  Paginas fisicas: 64 | libres: 52 | ocupadas: 12
+  Paginas libres (AVL en orden): 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos:
+    P1 | memoria solicitada: 4096 bytes | paginas: 4 | cache local (1/1): [P1:2->2]
+    P2 | memoria solicitada: 8192 bytes | paginas: 8 | cache local (1/1): [P2:6->10]
+  Cache global (2/8): [P2:6->10 P1:2->2]
+  Hits/misses -> local: 0/2 | global: 0/2
+
+------------------------------------------------------------
+[Linea 15] ALLOCATE P1 6144
+  P1 recibio 6 paginas mas (ahora tiene 10), cache local de 2
+  Estado de la memoria:
+  Paginas fisicas: 64 | libres: 46 | ocupadas: 18
+  Paginas libres (AVL en orden): 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos:
+    P1 | memoria solicitada: 10240 bytes | paginas: 10 | cache local (1/2): [P1:2->2]
+    P2 | memoria solicitada: 8192 bytes | paginas: 8 | cache local (1/1): [P2:6->10]
+  Cache global (2/8): [P2:6->10 P1:2->2]
+  Hits/misses -> local: 0/2 | global: 0/2
+
+------------------------------------------------------------
+[Linea 17] ARBOL AVL
+  AVL de paginas fisicas libres (clave = numero de pagina).
+  La raiz es la linea sin sangria; los hijos de la derecha van arriba
+  y los de la izquierda abajo.
+                              63
+                        62
+                  61
+                        60
+            59
+                        58
+                  57
+                        56
+      55
+                        54
+                  53
+                        52
+            51
+                        50
+                  49
+                        48
+47
+                              46
+                        45
+                              44
+                  43
+                              42
+                        41
+                              40
+            39
+                              38
+                        37
+                              36
+                  35
+                              34
+                        33
+                              32
+      31
+                              30
+                        29
+                              28
+                  27
+                              26
+                        25
+                              24
+            23
+                              22
+                        21
+                              20
+                  19
+                        18
+
+------------------------------------------------------------
+[Linea 18] ARBOL SPLAY P1
+  Splay Tree de P1 (clave = pagina virtual).
+  La raiz es la linea sin sangria; suele ser la pagina usada mas recientemente.
+9
+      8
+            7
+                  6
+                        5
+                              4
+                                    3
+                                          2
+                                                1
+                                                      0
+
+------------------------------------------------------------
+[Linea 19] ARBOL SPLAY P2
+  Splay Tree de P2 (clave = pagina virtual).
+  La raiz es la linea sin sangria; suele ser la pagina usada mas recientemente.
+      7
+6
+      5
+            4
+                  3
+                        2
+                              1
+                                    0
+
+------------------------------------------------------------
+[Linea 20] ARBOL SPLAY P9
+  ERROR: Proceso inexistente: P9
+
+------------------------------------------------------------
+[Linea 22] END_PROCESS P2
+  Proceso P2 finalizado: sus 8 paginas fisicas vuelven al AVL de libres
+  Estado de la memoria:
+  Paginas fisicas: 64 | libres: 54 | ocupadas: 10
+  Paginas libres (AVL en orden): 4 5 6 7 8 9 10 11 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos:
+    P1 | memoria solicitada: 10240 bytes | paginas: 10 | cache local (1/2): [P1:2->2]
+  Cache global (1/8): [P1:2->2]
+  Hits/misses -> local: 0/2 | global: 0/2
+
+------------------------------------------------------------
+[Linea 23] EXPORTAR metricas.csv
+  Metricas exportadas a metricas.csv (CSV: se puede abrir con Excel)
+
+============================================================
+RESUMEN FINAL
+============================================================
+  Operaciones ejecutadas con exito: 6
+  Errores detectados:               1
+
+Metricas:
+  Total de accesos:           2
+  Hits en cache local:        0
+  Misses en cache local:      2
+  Hits en cache global:       0
+  Misses en cache global:     2
+  Paginas asignadas:          10
+  Paginas libres:             54
+  Utilizacion de memoria:     15.62%
+
+Estado final de la memoria:
+  Paginas fisicas: 64 | libres: 54 | ocupadas: 10
+  Paginas libres (AVL en orden): 4 5 6 7 8 9 10 11 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+  Procesos activos:
+    P1 | memoria solicitada: 10240 bytes | paginas: 10 | cache local (1/2): [P1:2->2]
+  Cache global (1/8): [P1:2->2]
+  Hits/misses -> local: 0/2 | global: 0/2

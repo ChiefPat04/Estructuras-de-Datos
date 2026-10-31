@@ -430,3 +430,59 @@ void MemoryManager::mostrarMetricas(std::ostream& salida) const {
     salida.flags(formatoAnterior);
     salida.precision(precisionAnterior);
 }
+
+// ------------------------------------------------------------
+// Extras: visualizacion y exportacion
+// ------------------------------------------------------------
+
+void MemoryManager::mostrarArbolLibres(std::ostream& salida) const {
+    if (paginasLibres_.vacio()) {
+        salida << "  (no hay paginas libres)\n";
+        return;
+    }
+    paginasLibres_.mostrar(salida);
+}
+
+bool MemoryManager::mostrarArbolProceso(const std::string& id, std::ostream& salida) const {
+    Process* proceso = buscarProceso(id);
+    if (proceso == nullptr) return false;
+    if (proceso->getTabla().vacio()) {
+        salida << "  (el proceso no tiene paginas asignadas)\n";
+        return true;
+    }
+    proceso->getTabla().mostrar(salida);
+    return true;
+}
+
+void MemoryManager::escribirMetricasCsv(std::ostream& salida) const {
+    // Primera tabla: metricas generales (dos columnas: metrica, valor).
+    salida << "metrica,valor\n";
+    salida << "memoria_total," << memoriaTotal_ << "\n";
+    salida << "tamano_pagina," << tamanoPagina_ << "\n";
+    salida << "paginas_fisicas," << totalPaginas_ << "\n";
+    salida << "accesos_totales," << metricas_.accesos << "\n";
+    salida << "hits_cache_local," << metricas_.hitsLocal << "\n";
+    salida << "misses_cache_local," << metricas_.missesLocal << "\n";
+    salida << "hits_cache_global," << metricas_.hitsGlobal << "\n";
+    salida << "misses_cache_global," << metricas_.missesGlobal << "\n";
+    salida << "paginas_asignadas," << paginasOcupadas() << "\n";
+    salida << "paginas_libres," << paginasLibres() << "\n";
+
+    std::ios_base::fmtflags formatoAnterior = salida.flags();
+    std::streamsize precisionAnterior = salida.precision();
+    salida << "utilizacion_porcentaje," << std::fixed << std::setprecision(2)
+           << porcentajeUtilizacion() << "\n";
+    salida.flags(formatoAnterior);
+    salida.precision(precisionAnterior);
+
+    // Segunda tabla, separada por una linea vacia: un renglon por proceso activo.
+    salida << "\n";
+    salida << "proceso,memoria_solicitada,paginas_asignadas,cache_local_usada,cache_local_capacidad\n";
+    for (std::size_t i = 0; i < ordenProcesos_.size(); i++) {
+        const Process* proceso = buscarProceso(ordenProcesos_[i]);
+        salida << proceso->getId() << "," << proceso->getMemoriaSolicitada() << ","
+               << proceso->paginasAsignadas() << ","
+               << proceso->getCacheLocal().tamano() << ","
+               << proceso->getCacheLocal().capacidad() << "\n";
+    }
+}
