@@ -1,0 +1,19 @@
+===== GRAFO DIRIGIDO =====
+Grafo dirigido:
+A -> (B, peso: 5) (C, peso: 10) 
+B -> (D, peso: 20) 
+C -> (D, peso: 1) 
+D -> (F, peso: 2) 
+F -> 
+Recorrido DFS: A B D F C 
+Recorrido BFS: A B C D F 
+
+===== GRAFO NO DIRIGIDO =====
+Grafo no dirigido:
+1 -> (2, peso: 4) (3, peso: 3) 
+2 -> (1, peso: 4) (4, peso: 7) 
+3 -> (1, peso: 3) (4, peso: 1) 
+4 -> (2, peso: 7) (3, peso: 1) (5, peso: 2) 
+5 -> (4, peso: 2) 
+Recorrido DFS: 1 2 4 3 5 
+Recorrido BFS: 1 2 3 4 5 
